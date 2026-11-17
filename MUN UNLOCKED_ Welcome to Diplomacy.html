@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MUN UNLOCKED: Welcome to Diplomacy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Hanken+Grotesk:wght@400;600;700&display=swap">
+<style>
+/* === THEME: change colours and fonts here === */
+:root{--navy:#0B1B3A;--royal:#2447B8;--ivory:#F5F0E1;--gold:#C9A24B;--ok:#6CC49A;--bad:#E8806F;
+--serif:'Cormorant Garamond',Georgia,serif;--sans:'Hanken Grotesk','Segoe UI',sans-serif;--stage-bg:#050B1A;--slide-bg:#0B1B3A}
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* === FIXED 16:9 STAGE (viewport-base.css) === */
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--stage-bg,#000)}
+.deck-viewport{position:fixed;inset:0;overflow:hidden;background:var(--stage-bg,#000)}
+.deck-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;background:var(--slide-bg,#fff)}
+.slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;display:block;visibility:hidden;opacity:0;pointer-events:none;background:var(--slide-bg,#fff)}
+.slide.active,.slide.visible{visibility:visible;opacity:1;pointer-events:auto;z-index:1}
+img,video,canvas,svg{max-width:100%;max-height:100%}
+.deck-controls{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:1000}
+@media print{html,body{width:1920px;height:auto;overflow:visible;background:#fff}.deck-viewport{position:static;overflow:visible;background:#fff}.deck-stage{position:static;width:auto;height:auto;transform:none!important;background:none}.slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;width:1920px;height:1080px;break-after:page;page-break-after:always}.slide:last-child{break-after:auto;page-break-after:auto}.deck-controls{display:none!important}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.2s!important}}
+
+/* === SLIDE LOOK: navy field, gold meridian ring === */
+.slide{padding:58px 96px 0;color:var(--ivory);font:28px/1.35 var(--sans);background:radial-gradient(1100px 700px at 100% 0,rgba(36,71,184,.5),transparent 65%),linear-gradient(165deg,#0E2247,#07112B)}
+.slide::before{content:"";position:absolute;right:-260px;bottom:-440px;width:1100px;height:1100px;border-radius:50%;border:2px solid rgba(201,162,75,.22);box-shadow:inset 0 0 0 90px rgba(201,162,75,.03),inset 0 0 0 91px rgba(201,162,75,.15)}
+.slide>div,.slide>h2,.slide>p{position:relative}
+h1{font:700 190px/.95 var(--serif);letter-spacing:2px;margin:18px 0 6px}
+h2{font:700 84px/1 var(--serif)}
+.sub{font:italic 600 36px var(--serif);color:var(--gold);margin:8px 0 24px}
+.kk{font-size:26px;color:var(--gold);font-weight:600}
+.g{display:grid;gap:20px}
+.slide.visible .g>*{animation:up .6s both;animation-delay:calc(var(--i,0)*70ms)}
+@keyframes up{from{opacity:0;transform:translateY(24px)}}
+.c{background:rgba(245,240,225,.07);border:1px solid rgba(201,162,75,.35);border-top:4px solid var(--gold);border-radius:4px;padding:20px 26px}
+.c h3{font:700 36px/1.1 var(--serif);color:var(--gold);margin-bottom:6px}
+.c p,.c div.t{font-size:25px}
+b{color:var(--gold)}
+.ft{position:absolute!important;left:96px;right:96px;bottom:22px;display:flex;justify-content:space-between;font-size:20px;opacity:.55}
+.slide>.ft{position:absolute}
+
+/* === INTERACTIVE PIECES === */
+.chip,.opt,.cd,.flip{cursor:pointer;font-family:var(--sans)}
+.chip{display:inline-block;margin:0 10px 12px 0;padding:10px 22px;font-size:26px;font-weight:600;color:var(--ivory);background:none;border:1.5px solid var(--gold);border-radius:30px}
+.chip.on{background:var(--gold);color:var(--navy)}
+.opt{display:block;width:100%;text-align:left;font-size:28px;font-weight:600;color:var(--ivory);background:rgba(245,240,225,.08);border:1.5px solid rgba(201,162,75,.5);border-radius:4px;padding:14px 22px;margin-bottom:12px}
+.opt:hover{background:rgba(201,162,75,.22)}
+.opt.ok{background:var(--ok);color:#06220f;border-color:var(--ok)}
+.opt.no{background:var(--bad);color:#2a0a05;border-color:var(--bad)}
+.done .opt:not(.ok):not(.no){opacity:.45}
+.ex{display:none;margin-top:12px;font-size:26px;color:var(--gold);font-weight:600}.done .ex{display:block}
+.og{display:grid;grid-template-columns:1fr 1fr;gap:14px}.og .opt{margin:0;min-height:92px}
+.o3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:12px}.o3 .opt{margin:0}
+.flip{height:236px;padding:16px 18px;text-align:center;display:flex;flex-direction:column;justify-content:center}
+.flip .fr{font:700 40px/1.1 var(--serif);color:var(--gold)}.flip .fr small{display:block;font:400 20px var(--sans);color:var(--ivory);opacity:.6;margin-top:8px}
+.flip .bk{display:none;text-align:left;font-size:24px;line-height:1.28}.flip .bk i{display:block;color:var(--gold);font-size:22px;margin-top:6px}
+.flip.on{background:rgba(36,71,184,.45)}.flip.on .fr{display:none}.flip.on .bk{display:block}
+.big .flip{height:330px}.big .flip .bk{font-size:30px}.big .flip .fr{font-size:48px}
+.btn,.qn{font:700 24px var(--sans);color:var(--navy);background:var(--gold);border:0;border-radius:4px;padding:12px 28px;cursor:pointer}
+.qn{display:none;margin-top:14px}
+.qq{font:600 50px/1.12 var(--serif);margin:10px 0 22px}.lv{font-size:26px;color:var(--gold);font-weight:700}
+.cd{text-align:left;color:var(--ivory);padding:18px 20px;min-height:430px;font-size:22px;line-height:1.3}
+.cd h3{font-size:30px}.cd .tg{display:none;margin-top:14px;padding:8px 12px;font-weight:700;font-size:22px;background:var(--gold);color:var(--navy);border-radius:3px}.cd.on .tg{display:block}
+.fl{display:flex;align-items:center;gap:14px;margin-bottom:12px}.fl .n{flex:1;background:rgba(245,240,225,.08);border-left:4px solid var(--gold);padding:10px 14px;font-size:23px;line-height:1.2;min-height:84px;display:flex;align-items:center}
+.ar{position:relative;width:46px;height:4px;flex:none;background:linear-gradient(90deg,var(--gold) 50%,transparent 50%) 0 0/16px 4px;animation:mv .8s linear infinite}
+.ar::after{content:"";position:absolute;right:-8px;top:-8px;border:10px solid transparent;border-left:14px solid var(--gold);border-right:0}
+@keyframes mv{to{background-position:16px 0}}
+
+/* === DECK CONTROLS + PRESENTER NOTES === */
+.deck-controls{display:flex;gap:10px;align-items:center;font:600 18px var(--sans);color:var(--ivory)}
+.deck-controls button{font:700 18px var(--sans);background:var(--gold);color:var(--navy);border:0;border-radius:4px;padding:6px 16px;cursor:pointer}
+#nt{display:none;position:fixed;left:0;right:0;bottom:0;z-index:999;background:var(--ivory);color:var(--navy);padding:14px 24px 60px;font:19px/1.4 var(--sans);max-height:45%;overflow:auto}
+</style>
+</head>
+<body>
+<div class="deck-viewport"><main class="deck-stage" id="deckStage"></main></div>
+<div id="nt"></div>
+<div class="deck-controls"><button id="pv">‹</button><span id="pg">1 / 19</span><button id="nx">›</button><button id="nb">Notes (N)</button></div>
+
+<script>
+/* === CONTENT DATA: edit text here (press E in the browser for live editing) === */
+const $=s=>document.querySelector(s), O=a=>a.map((o,i)=>`<button class="opt" data-i="${i}">${o}</button>`).join('');
+
+// Slide 2: six principal organs
+const U=[["General Assembly","All Member States deliberate; most resolutions are recommendations."],["Security Council","Primary duty: international peace and security. 15 members, 5 permanent; can adopt binding decisions."],["ECOSOC","Coordinates economic, social and development cooperation."],["International Court of Justice","Principal judicial organ: settles legal disputes between consenting states."],["Secretariat","Runs the UN day to day, led by the Secretary-General."],["Trusteeship Council","Supervised trust territories; suspended operations in 1994."]];
+
+// Slide 3: term, definition, example
+const V=[["Delegate","Represents an assigned country, organisation or portfolio.","“The delegate of Brazil…”"],["Dais / Executive Board","The Chair and board who preside over the committee.","They rule on points and motions."],["Chair","Moderates debate, recognises speakers, applies the rules.","“The floor is open.”"],["Placard","Name card raised to be recognised or to vote.","Raise it, then wait for the Chair."],["Agenda","The topic the committee is scheduled to discuss.","Access to clean drinking water"],["Roll Call","Checks which delegations are present.","The Chair works through the list."],["General Speakers’ List","Delegates waiting to give formal speeches on the agenda.","Ask to be added to the list."],["Moderated Caucus","Structured, speaker-by-speaker debate on a sub-topic.","10 min, 45 sec per speaker"],["Unmoderated Caucus","Informal negotiation outside formal debate.","8 min to merge proposals"],["Working Paper","Informal ideas that may become a draft resolution.","Shared clause ideas"],["Draft Resolution","Formal written proposal for the committee to consider.","Follows conference rules"],["Sponsors & Signatories","Sponsors help author a draft. Signatories want it discussed.","Signing ≠ supporting"],["Amendments","Proposed changes to a draft resolution.","Reword one clause"],["Yield","Give up unused speaking time, as the rules permit.","Yield to the Chair"]];
+
+// Slide 4: points
+const P=[["Point of Personal Privilege","Fix a comfort or audibility issue that blocks your participation.","You cannot hear the speaker.","“Point of Personal Privilege: could the speaker please speak louder?”"],["Point of Order","Flag a possible breach of the rules of procedure.","Procedure is not being followed.","“Point of Order: the speaker appears to have exceeded the allotted time.”"],["Point of Parliamentary Inquiry","Ask the Chair a question about procedure.","You are unsure whether a rule or motion is allowed.","“Point of Parliamentary Inquiry: is a motion to extend this caucus in order?”"]];
+
+// Slide 6: quiz (question, four options, index of correct answer). Edit options here.
+const Q=[["What does a delegate represent?",["Their own personal opinions","An assigned country, organisation or portfolio","The Chair of the committee","The UN Secretariat"],1],
+["What is a placard used for?",["To interrupt a speaker at any time","To be recognised by the Chair or to vote","To submit a draft resolution","To list the committee’s rules"],1],
+["Which UN organ has primary responsibility for international peace and security?",["General Assembly","ECOSOC","Security Council","Trusteeship Council"],2],
+["You cannot hear a speaker. Which point should you raise?",["Point of Order","Point of Parliamentary Inquiry","Point of Personal Privilege","Motion to adjourn"],2],
+["You notice a procedural violation. Which point is relevant?",["Point of Personal Privilege","Point of Order","Point of Parliamentary Inquiry","Motion to close debate"],1],
+["You want to clarify a procedural rule with the Chair. Which point should you raise?",["Point of Order","Point of Personal Privilege","Motion for a moderated caucus","Point of Parliamentary Inquiry"],3],
+["What is the main purpose of an unmoderated caucus?",["To hear formal speeches one by one","To vote on amendments","To negotiate informally and write proposals together","To adjourn the meeting"],2],
+["You want structured discussion on a specific topic. Which motion should you propose?",["Motion for a moderated caucus","Motion for an unmoderated caucus","Point of Order","Motion to adjourn"],0],
+["Your group wants to combine ideas and prepare a draft resolution. What should you do?",["Motion for a moderated caucus","Point of Personal Privilege","Motion for an unmoderated caucus","Motion to close debate"],2],
+["A delegate raises a Point of Order merely because they disagree with another country’s policy. Is this appropriate?",["Yes, any disagreement qualifies","No, it is about procedure, not content","Yes, if the speaker is a permanent member","Only during a moderated caucus"],1]];
+const LV=["Level 1 · Diplomatic Rookie","Level 2 · Procedure Under Pressure","Level 3 · The Executive Board’s Favourite"];
+const TT=s=>s>9?"Secretary-General material":s>7?"Ambassador":s>4?"Seasoned Delegate":"Rising Rookie";
+
+// Slide 7: mock committee steps
+const M=[["Chair","“The committee is now in session. The floor is open for motions.”","Chair opens the floor"],["Delegate A","“Motion for a moderated caucus on emergency drinking-water distribution, 6 minutes, 30-second speaking time.”","MOTION"],["Delegate B","“Emergency water should be prioritised for hospitals, shelters and people at immediate risk.”","SPEECH"],["Delegate C","“Point of Personal Privilege: could the speaker repeat the last sentence? The microphone cut out.”","POINT"],["Delegate A","“Motion for an unmoderated caucus, 5 minutes, to coordinate proposals and prepare draft operative clauses.”","MOTION"],["All delegates","Leave their seats, compare positions, find common ground and draft clauses together.","NEGOTIATION"]];
+
+// Slide 9: open-floor prompts
+const F=[["First-time MUN","What happens if I make a procedural mistake?"],["Research & preparation","What should I research first after receiving my country and agenda?"],["Representing a country","Can I disagree with my country’s actual policy?"],["Public speaking","What if I freeze when I have to give my first speech?"],["Committee procedure","Do all conferences use exactly the same rules?"],["The upcoming conference","How do I approach other delegates during an unmoderated caucus?"]];
+
+// Presenter notes (press N)
+const N=["Welcome warmly: no prior experience needed. Define MUN in one sentence. PAUSE and ask: “What comes to your mind when you hear diplomacy?” Tap chips as answers come in. Mention the two-day conference. Invite the opening speaker (30–45 s). Say “Let’s unlock the basics.” Next: the UN.",
+"Spend about a minute per organ. GA resolutions are mostly recommendations; Security Council decisions can bind. Trusteeship Council suspended in 1994. MUN may simulate bodies beyond these six, so read the background guide. ASK: name a Security Council issue (conflict, sanctions, peacekeeping). ASK: does a delegate give personal opinion? Answer: no, the assigned position. Next: “Now the language you will hear.”",
+"Vocabulary relay: tap a tile, read it aloud, then invite a volunteer to use the term in a sentence. Quick checks: name card you raise = placard; stepping out to negotiate = unmoderated caucus. Stress signing a draft is not the same as supporting it. Next: “Knowing which tool to use keeps you effective.”",
+"A point raises an immediate procedural or practical matter; a motion proposes an action. Say “under our conference rules” and check the rulebook. Demo with three volunteers (microphone, inquiry, order). Scenario answer: Point of Order. ASK: disagree with a policy, raise a Point of Order? No, that is content, not procedure. Next: motions.",
+"A motion proposes an action; the Chair may ask for topic, duration and speaking time. Walk the seven motions and confirm each exists in your rulebook. Read the example aloud, then trace both flowcharts. “Let’s discuss the issue” is too vague. Informal negotiation never means ignoring the Chair. Next: the quiz.",
+"Run it live: ask for hands or placards, take an answer, then tap an option. Answers: "+Q.map((q,i)=>(i+1)+"-"+"ABCD"[q[2]]).join(", ")+". Show the final score and title; invite the top scorer to stand. If the room is shy, read each question and take a vote. Next: see it in action.",
+"Set the flood scene. Pick a Chair and 3–4 volunteers, or read the cards yourself. For each card ask the room: point, motion or speech? Then tap to reveal. Debrief: a point raises a procedural or practical issue; a motion proposes an action; a good motion names topic, duration and speaking time. Next: decision challenge.",
+"Let tables hold up placards (A–D) before you tap. Answers: 1 Point of Parliamentary Inquiry; 2 Motion for a moderated caucus; 3 Motion for an unmoderated caucus. If someone is wrong: thank them, clarify, move on. Next: open floor.",
+"Open the floor. If it is quiet, tap a topic for a prompt question. Say: there are no silly questions. For nervous first-timers: prepare a short opening statement, know your country’s broad position, listen, and ask the Chair for clarification. Q&A support collects hesitant questions.",
+"Recap the three takeaways. Thank faculty mentors, the Department of Student Welfare, club members and attendees. Tell students where to find official rules and background guides. Say the tagline together, then thank everyone."];
+
+/* === SLIDES === */
+const S=[];
+S[0]=`<div class="g" style="grid-template-columns:1fr 640px;gap:56px;height:930px">
+<div><div style="display:flex;align-items:center;gap:28px;height:130px;margin-bottom:14px"><img src="logo-naac.png" alt="NAAC" style="height:100%"><img src="logo-krmu.webp" alt="K.R. Mangalam University" style="height:100%"><img src="logo-wordmark.png" alt="K.R. Mangalam University" style="height:75%"><img src="logo-dsw.png" alt="DSW" style="height:100%"></div><h1>MUN UNLOCKED</h1>
+<div class="sub" style="font-size:62px">Welcome to Diplomacy</div>
+<p style="font-size:32px;margin-bottom:30px">An orientation to diplomacy, debate and global affairs. No prior experience needed.</p>
+<div class="g" style="grid-template-columns:repeat(3,1fr)">
+<div class="c"><h3>What is MUN?</h3><p>A simulation of the UN where students act as delegates.</p></div>
+<div class="c"><h3>Why take part?</h3><p>Research, speak, negotiate, listen and collaborate.</p></div>
+<div class="c"><h3>You will learn</h3><p>UN basics, MUN language, points, motions and a live mini committee.</p></div></div></div>
+<div><div class="c"><div class="qq" style="font-size:44px;margin-top:0">What comes to your mind when you hear <i>diplomacy</i>?</div>
+${["Negotiation","Listening","Respect","Compromise","Representation","Debate","Peace"].map(w=>`<button class="chip">${w}</button>`).join('')}</div>
+<div class="c" style="margin-top:90px;background:rgba(36,71,184,.4)"><h3>The two-day MUN conference is coming</h3><p>Today: 17 November 2026<br>Multipurpose Hall, A Block, 4th Floor</p></div></div></div>`;
+
+S[1]=`<h2>Inside the United Nations</h2><div class="sub">Six principal organs, one shared table</div>
+<div class="c" style="width:520px;margin:0 auto 16px;text-align:center;padding:10px;border-top-width:1px;font:700 34px var(--serif);color:var(--gold)">United Nations</div>
+<div class="g" style="grid-template-columns:repeat(3,1fr)">${U.map(u=>`<div class="c"><h3>${u[0]}</h3><p>${u[1]}</p></div>`).join('')}</div>
+<div class="c" style="margin-top:20px;background:rgba(36,71,184,.4)"><p><b>How MUN works:</b> delegates represent assigned countries or portfolios, using researched positions, not personal opinions. They debate an agenda, negotiate, and aim for a resolution, recommendation, directive or communiqué. Committees may simulate bodies beyond these six, so read your background guide.</p></div>`;
+
+/* single-slide glossary, replaced by the two-part version below
+S[2]=`<h2>Speak the Language of MUN</h2><div class="sub" style="margin-bottom:18px">Tap a tile to reveal its meaning</div>
+<div class="g" style="grid-template-columns:repeat(5,1fr)">${V.map(v=>`<div class="c flip"><div class="fr">${v[0]}<small>tap to reveal</small></div><div class="bk">${v[1]}<i>${v[2]}</i></div></div>`).join('')}
+<div class="c" style="display:flex;align-items:center;justify-content:center;text-align:center;font:700 30px var(--serif);color:var(--gold)" id="vc">0 of 14 revealed</div></div>`;*/
+
+S[3]=`<h2>Master the Points of Parliamentary Procedure</h2><div class="sub">A point flags a procedural issue. A motion proposes an action.</div>
+<div class="g" style="grid-template-columns:repeat(3,1fr)">${P.map(p=>`<div class="c"><h3>${p[0]}</h3><p><b>Purpose:</b> ${p[1]}</p><p style="margin-top:8px"><b>Raise it when:</b> ${p[2]}</p><p style="margin-top:8px"><b>Say:</b> <i>${p[3]}</i></p></div>`).join('')}</div>
+<div class="c" style="margin-top:22px" data-a="1" data-x="The Chair has already moved to voting, so the rules are not being followed."><b>Which point?</b> The Chair has moved to voting, but another delegate is still recognised to speak.
+<div class="o3">${O(["Personal Privilege","Order","Parliamentary Inquiry"])}</div><div class="ex"></div></div>`;
+
+/* single-slide motions, replaced by the four-slide version below
+S[4]=`<h2>Motions: Know When to Make Your Move</h2><div class="sub" style="margin-bottom:14px">Subject to your conference’s Rules of Procedure</div>
+<div class="g" style="grid-template-columns:1fr 700px;margin-bottom:16px"><div class="c" style="padding:12px 24px"><div style="font-size:24px;line-height:1.42">
+<b>1 Open / set the agenda</b> · choose the first item<br><b>2 Moderated caucus</b> · focused, timed speeches<br><b>3 Unmoderated caucus</b> · informal negotiation<br><b>4 Extend a caucus</b> · add time, if allowed<br><b>5 Introduce a draft resolution</b> · after submission steps<br><b>6 Close debate</b> · move on, often to voting<br><b>7 Suspend or adjourn</b> · pause until a time, or end the session</div></div>
+<div class="c" style="padding:12px 24px;background:rgba(36,71,184,.4)"><h3>How to frame a motion</h3><p style="font-size:24px">“The delegate of <b>[country]</b> motions for a <b>[moderated / unmoderated]</b> caucus on <b>[topic]</b>, for <b>[duration]</b>, with <b>[speaking time]</b>.”</p><p style="font-size:22px;margin-top:6px"><i>E.g. a moderated caucus on protection of civilians, 10 minutes, 45-second speaking time.</i></p></div></div>
+<div class="kk" style="margin-bottom:6px">Moderated caucus</div><div class="fl">${["Motion: topic, total time, speaking time","Committee votes / Chair accepts","Chair recognises speakers","Timed speeches, one by one","Caucus ends, floor reopens"].map(x=>`<div class="n">${x}</div>`).join('<div class="ar"></div>')}</div>
+<div class="kk" style="margin-bottom:6px">Unmoderated caucus</div><div class="fl">${["Motion: duration and purpose","Committee votes / Chair accepts","Step out of formal debate","Merge ideas, draft clauses","Return to formal debate"].map(x=>`<div class="n">${x}</div>`).join('<div class="ar"></div>')}</div>`;*/
+
+S[5]=`<h2>The Delegate’s Test</h2><div class="sub">MUN Knowledge Challenge · tap your answer</div><div class="c" id="qz" style="min-height:640px"></div>`;
+
+S[6]=`<div style="display:flex;justify-content:space-between;align-items:flex-end"><div><h2>The Mock Committee</h2><div class="sub">Flood relief: emergency drinking-water distribution. Point, motion or speech?</div></div><button class="btn ra" style="margin-bottom:24px">Reveal all</button></div>
+<div class="g" style="grid-template-columns:repeat(6,1fr)">${M.map(m=>`<button class="c cd"><h3>${m[0]}</h3>${m[1]}<div class="tg">${m[2]}</div></button>`).join('')}</div>
+<p style="margin-top:20px;font-size:26px">Audience: call it out first, then tap the card to check.</p>`;
+
+S[7]=`<h2>Put Your Knowledge to the Test</h2><div class="sub">Which point or motion fits each situation?</div>
+<div class="g" style="grid-template-columns:repeat(3,1fr)">${[["You need clarification about whether a procedural motion is allowed.",0,"Ask the Chair about the rules with a Point of Parliamentary Inquiry."],["You want to discuss a sub-topic formally with a fixed speaking time.",2,"A moderated caucus gives structured debate. State the topic, total time and speaking time."],["You want to negotiate and combine resolution clauses with other delegates.",3,"An unmoderated caucus gives informal time to merge ideas. State duration and purpose."]].map(s=>`<div class="c" data-a="${s[1]}" data-x="${s[2]}"><p style="font-size:30px;font-weight:600;margin-bottom:16px;min-height:130px">${s[0]}</p>${O(["Point of Parliamentary Inquiry","Point of Order","Motion: Moderated Caucus","Motion: Unmoderated Caucus"])}<div class="ex"></div></div>`).join('')}</div>`;
+
+S[8]=`<div class="g" style="grid-template-columns:560px 1fr;gap:70px;align-items:center;height:900px"><div style="text-align:center"><svg width="260" height="360" viewBox="0 0 100 140" fill="none" stroke="#C9A24B" stroke-width="2.5" stroke-linecap="round"><rect x="34" y="6" width="32" height="64" rx="16"/><path d="M20 58a30 30 0 0 0 60 0M50 88v30M32 122h36M40 22h20M40 32h20M40 42h20" opacity=".9"/></svg></div>
+<div><h2 style="font-size:130px">Open Floor</h2><div class="sub">Your questions, our answers. There are no silly questions.</div>
+<div>${F.map(f=>`<button class="chip" data-q="${f[1]}">${f[0]}</button>`).join('')}</div>
+<div class="c" style="margin-top:14px;min-height:130px;font:italic 600 38px/1.2 var(--serif)" id="q9">Tap a topic for a question to get us started.</div></div></div>`;
+
+S[9]=`<h2>Your Diplomatic Journey Starts Here</h2><div class="sub">Three things to carry into the conference</div>
+<div class="g" style="grid-template-columns:repeat(3,1fr)"><div class="c"><h3>Represent</h3><p>Speak for your assigned country or portfolio, not just your own opinion.</p></div><div class="c"><h3>Use procedure well</h3><p>Know a point from a motion, and use each for its purpose.</p></div><div class="c"><h3>Listen, negotiate, collaborate</h3><p>Diplomacy is about building workable solutions together.</p></div></div>
+<div class="c" style="margin-top:22px;background:rgba(36,71,184,.4)"><p><b>The upcoming two-day MUN conference</b> is your chance to try it all. Join us, ask questions, and start your journey as a delegate.</p></div>
+<div style="font:700 66px/1.12 var(--serif);color:var(--gold);margin-top:36px;text-align:center">LEARN THE RULES. FIND YOUR VOICE.<br>BECOME A DELEGATE.</div>`;
+
+/* === EXTRA SLIDES: edit text here === */
+const H=(t,s)=>`<h2>${t}</h2><div class="sub">${s}</div>`,C=(h,p,x='')=>`<div class="c" ${x}><h3>${h}</h3><p>${p}</p></div>`,FL=a=>a.map(x=>`<div class="n">${x}</div>`).join('<div class="ar"></div>'),FT=a=>`<div class="c flip"><div class="fr">${a[0]}<small>${a[2]}</small></div><div class="bk">${a[1]}</div></div>`;
+
+// Run sheet
+const RS=H('Today at a Glance','Explain it. Demonstrate it. Then you try it.')+`<div class="g" style="grid-template-columns:repeat(2,1fr)">${[["00:00","Welcome and commencement"],["00:04","UN functionaries and committees"],["00:14","Introductory MUN language"],["00:21","Points of Parliamentary Procedure"],["00:34","Motions and enquiries during caucuses"],["00:46","Mini mock committee"],["00:54","Open floor: questions"],["00:58","Closing remarks"]].map(r=>C(r[0],r[1])).join('')}</div><div class="c" style="margin-top:20px;background:rgba(36,71,184,.4)"><p>17 November 2026 · Multipurpose Hall, A Block, 4th Floor · No prior experience needed</p></div>`;
+
+// How a committee works
+const CF=H('How a MUN Committee Works','Delegates, not spectators')+`<div class="fl" style="margin:10px 0 24px">${FL(["Receive your country or portfolio","Read the background guide","Research your position","Debate and negotiate","Reach an outcome"])}</div><p style="font-size:28px;margin-bottom:22px">The outcome may be a resolution, recommendation, directive or communiqué. Committees can be real UN bodies, specialised agencies, regional or historical bodies, or fictional crisis committees.</p><div class="g big" style="grid-template-columns:1fr 1fr">${[["Name one issue the Security Council might discuss.","Armed conflict, sanctions, peacekeeping, or threats to international peace and security.","ask the room, then tap"],["Does a delegate speak only their personal opinion?","No. They represent the assigned country’s policy, supported by research.","ask the room, then tap"]].map(FT).join('')}</div>`;
+
+// Vocabulary in two parts
+const VT=(a,b,t,s)=>H(t,s)+`<div class="g big" style="grid-template-columns:repeat(4,1fr)">${V.slice(a,b).map(v=>FT([v[0],v[1]+`<i>${v[2]}</i>`,'tap to reveal'])).join('')}<div class="c vc" style="display:flex;align-items:center;justify-content:center;font:700 34px var(--serif);color:var(--gold)">0 of ${b-a} revealed</div></div>`;
+
+// Points: live demo and practice
+const PD=H('Points in Action','The Chair opens the floor for points')+`<div class="g" style="grid-template-columns:repeat(3,1fr)">${[["Delegate 1","Point of Personal Privilege. Could the microphone be adjusted? We cannot hear the speaker clearly.","That point is well taken. The microphone will be adjusted. Thank you."],["Delegate 2","Point of Parliamentary Inquiry. Is a delegate allowed to raise a Point of Order during a moderated caucus?","Please refer to the committee’s rules. Under the rules used here, a Point of Order may flag a procedural irregularity, subject to timing rules."],["Delegate 3","Point of Order. The previous speaker was recognised after the Chair had already moved to voting procedure.","Thank you. The Chair will clarify the sequence and rule on the point."]].map(d=>`<div class="c"><h3>${d[0]}</h3><p><i>“${d[1]}”</i></p><p style="margin-top:16px;color:var(--gold)"><b>Chair:</b> “${d[2]}”</p></div>`).join('')}</div><div class="c" style="margin-top:22px;background:rgba(36,71,184,.4)"><p><b>Remember:</b> use points to clarify or protect the procedure, not to interrupt, show off or deliver an extra speech.</p></div>`;
+const SQ=(t,rows)=>H(t,'Choose, then see why')+`<div class="g" style="grid-template-columns:repeat(3,1fr)">${rows.map(s=>`<div class="c" data-a="${s[2]}" data-x="${s[3]}"><p style="font-size:30px;font-weight:600;margin-bottom:16px;min-height:150px">${s[0]}</p>${O(s[1])}<div class="ex"></div></div>`).join('')}</div>`;
+const P3=["Personal Privilege","Order","Parliamentary Inquiry"],M4O=["Motion for a moderated caucus","Motion for an unmoderated caucus","Point of Order","Point of Parliamentary Inquiry"];
+const PS=SQ('Point or Not? Your Turn',[["You cannot hear the speaker over the noise in the room.",P3,0,"Audibility affects your participation, so raise a Point of Personal Privilege."],["You disagree with another country’s policy proposal. Should you raise a Point of Order?",["Yes","No"],1,"No. Respond in debate, in a speech or through a permitted question. A Point of Order is about procedure, not content."],["You are not sure whether an extension is allowed.",P3,2,"Ask the Chair with a Point of Parliamentary Inquiry."]]);
+
+// Motions in four slides
+const M1=H('Seven Motions to Know','A motion proposes that the committee take an action')+`<div class="g" style="grid-template-columns:repeat(4,1fr)">${[["Open / set the agenda","Choose which agenda item the committee takes up first."],["Moderated caucus","Focused, formal discussion on a sub-topic."],["Unmoderated caucus","Informal negotiation period."],["Extend a caucus","Request more time, if extensions are allowed."],["Introduce a draft resolution","Formally bring a draft forward, after required steps."],["Close debate","End debate and move to the next stage, often voting."],["Suspend or adjourn","Suspend pauses until a stated time; adjourn ends the session."]].map(m=>C(m[0],m[1],'style="min-height:280px"')).join('')}<div class="c" style="background:rgba(36,71,184,.4);display:flex;align-items:center"><p>Names, order and timing depend on your conference’s Rules of Procedure.</p></div></div>`;
+const CK=(c,h,p)=>`<div class="c" style="border-top-color:var(--${c});margin-bottom:16px"><h3 style="color:var(--${c})">${h}</h3><p>${p}</p></div>`;
+const M2=H('How to Frame a Motion','Be specific, relevant and realistic')+`<div class="c" style="background:rgba(36,71,184,.4);margin-bottom:20px"><p style="font-size:32px">“The delegate of <b>[country]</b> motions for a <b>[moderated / unmoderated]</b> caucus on <b>[topic]</b>, for <b>[duration]</b>, with <b>[speaking time]</b>.”</p></div><div class="g" style="grid-template-columns:1fr 1fr"><div>${CK('bad','Too vague','“Let’s discuss the issue.”')}${CK('ok','Clear','“Motion for a moderated caucus on protection of civilians, for 10 minutes, with 45-second speaking time.”')}${CK('ok','Clear','“Motion for an unmoderated caucus for 8 minutes to merge proposals and work on a draft resolution.”')}</div><div class="c"><h3>Before you raise it, check</h3><p>${["Is it relevant to the agenda and useful now?","Have I named a specific sub-topic or purpose?","Moderated: total time and speaking time stated?","Unmoderated: realistic time and a clear goal?","Am I raising it when the Chair allows?"].map(x=>'✔ '+x).join('<br><br>')}</p></div></div>`;
+const M3=H('Moderated vs Unmoderated','Two caucuses, two ways of working')+`<div class="kk" style="margin-bottom:8px">Moderated caucus: structured, speaker by speaker</div><div class="fl">${FL(["Motion: topic, total time, speaking time","Committee votes / Chair accepts","Chair recognises speakers","Timed speeches, one by one","Caucus ends, floor reopens"])}</div><div class="kk" style="margin:20px 0 8px">Unmoderated caucus: informal negotiation</div><div class="fl">${FL(["Motion: duration and purpose","Committee votes / Chair accepts","Step out of formal debate","Merge ideas, draft clauses","Return to formal debate"])}</div><div class="g" style="grid-template-columns:1fr 1fr;margin-top:24px">${C('In a moderated caucus','Wait to be recognised. Never speak over another delegate. Follow the Chair’s time and speaking rules.')}${C('In an unmoderated caucus','Approach delegates, ask their position, find common ground, discuss clauses. Still follow the Chair’s instructions.')}</div>`;
+const M4=SQ('Ask and Tell: Which Move?',[["The committee is on clean drinking water after a disaster. You want delegates to focus on emergency water distribution.",M4O,0,"A moderated caucus, e.g. 8 minutes with 40-second speaking time."],["Possible solutions are on the table and you want to combine ideas with other countries.",M4O,1,"An unmoderated caucus with a clear duration and purpose, such as merging proposals."],["You do not understand whether an extension is allowed.",M4O,3,"Ask the Chair with a Point of Parliamentary Inquiry."]]);
+
+// Common mistakes
+const MK=H('Common First-Timer Mistakes','Everyone makes them. Tap to see the fix.')+`<div class="g big" style="grid-template-columns:repeat(3,1fr)">${[["A Point of Order to challenge an argument","That is content, not procedure. Respond in debate or through a permitted question."],["A motion with no topic or time","Name the topic, duration and speaking time where required."],["Assuming every conference uses the same rules","Check your conference’s Rules of Procedure and terminology."],["Speaking without being recognised","Wait for the Chair. Never talk over another delegate."],["Treating a signatory as a supporter","Signing a draft does not necessarily mean supporting it."],["Thinking MUN is only a speech contest","Research, negotiation, collaboration and procedure matter too."]].map(a=>FT([a[0],a[1],'tap for the fix'])).join('')}</div>`;
+
+// Final order: [slide HTML, presenter note]
+const Z=[[S[0],N[0]],[RS,"Skim the 60-minute run sheet. Stress this is ask-and-tell, not a lecture. Introduce the club members leading each segment."],[S[1],N[1]],[CF,"Walk the flow left to right. Then ASK each question and tap to reveal the answer. Remind students to read the background guide first."],[VT(0,7,'Speak the Language of MUN: Part 1','Who’s who and what’s what'),N[2]],[VT(7,14,'Speak the Language of MUN: Part 2','How debate flows and documents grow'),"Same relay: tap a tile, read it, invite a volunteer to use the term in a sentence. Quick check: stepping out of formal debate to negotiate = unmoderated caucus."],[S[3],N[3]],[PD,"Ask three volunteers to read the Delegate lines and one the Chair. Pause after each: which point was that? Stress “under our conference rules”."],[PS,"Let tables vote with placards before tapping. Answers: 1 Personal Privilege; 2 No (content, not procedure); 3 Parliamentary Inquiry."],[M1,"One line per motion. Ask which they have seen. Confirm each exists in your conference rulebook before presenting."],[M2,"Read the template aloud, then have two volunteers frame a motion using the checklist. Praise specificity."],[M3,"Trace each flow with a finger. Moderated: recognised speakers, timed. Unmoderated: move around and negotiate. Neither ignores the Chair."],[M4,"Ask the room first. Answers: 1 moderated caucus; 2 unmoderated caucus; 3 Point of Parliamentary Inquiry. Invite someone to phrase the full motion."],[S[5],N[5]],[S[6],N[6]],[S[7],N[7]],[MK,"Normalise mistakes: thank, clarify, move on. Tap each tile after the room guesses the fix."],[S[8],N[8]],[S[9],N[9]]];
+
+$('#deckStage').innerHTML=Z.map(([h],i)=>`<section class="slide${i?'':' active visible'}">${h}<div class="ft"><span>MUN UNLOCKED · K.R. Mangalam University MUN Club</span><span>${i+1} / ${Z.length}</span></div></section>`).join('');
+document.querySelectorAll('.g').forEach(g=>[...g.children].forEach((c,i)=>c.style.setProperty('--i',i)));
+
+/* === QUIZ ENGINE === */
+let qi=0,sc=0;
+function qz(){const b=$('#qz');
+ if(qi>=Q.length){b.removeAttribute('data-a');b.innerHTML=`<div style="text-align:center;padding-top:60px"><div class="lv">Final score</div><div style="font:700 190px/1 var(--serif);color:var(--gold)">${sc} / 10</div><div class="qq">${TT(sc)}</div><button class="btn" id="rs">Play again</button></div>`;return}
+ const q=Q[qi];b.dataset.a=q[2];b.classList.remove('done');
+ b.innerHTML=`<div class="lv">${LV[qi<3?0:qi<7?1:2]} · Question ${qi+1} of 10</div><div class="qq">${q[0]}</div><div class="og">${q[1].map((o,i)=>`<button class="opt" data-i="${i}"><b>${'ABCD'[i]}.</b> ${o}</button>`).join('')}</div><div class="ex"></div><button class="qn">${qi<9?'Next question':'See my score'}</button><div style="margin-top:12px;font-size:24px;opacity:.7">Score: ${sc}</div>`}
+qz();
+
+/* === CLICK HANDLING (tiles, chips, answers, reveals) === */
+document.addEventListener('click',e=>{
+ const t=e.target.closest('.opt,.flip,.chip,.cd,.qn,.ra,#rs');if(!t)return;
+ if(t.matches('.opt')){const c=t.closest('[data-a]');if(c.classList.contains('done'))return;c.classList.add('done');
+  const o=c.querySelectorAll('.opt'),ok=+t.dataset.i==+c.dataset.a;t.classList.add(ok?'ok':'no');o[c.dataset.a].classList.add('ok');
+  c.querySelector('.ex').textContent=(ok?'Correct! ':'Not quite. ')+(c.dataset.x||'Answer: '+o[c.dataset.a].textContent.replace(/^[A-D]\.\s/,''));
+  if(c.id=='qz'){if(ok)sc++;c.querySelector('.qn').style.display='inline-block'}}
+ else if(t.matches('.flip')){t.classList.toggle('on');const s=t.closest('.slide'),v=s.querySelector('.vc');if(v)v.textContent=s.querySelectorAll('.flip.on').length+' of '+s.querySelectorAll('.flip').length+' revealed'}
+ else if(t.matches('.chip')){if(t.dataset.q){document.querySelectorAll('.chip[data-q]').forEach(x=>x.classList.remove('on'));t.classList.add('on');$('#q9').textContent=t.dataset.q}else t.classList.toggle('on')}
+ else if(t.matches('.cd'))t.classList.toggle('on');
+ else if(t.matches('.ra'))document.querySelectorAll('.cd').forEach(x=>x.classList.add('on'));
+ else if(t.matches('.qn')){qi++;qz()}
+ else if(t.id=='rs'){qi=0;sc=0;qz()}});
+
+/* === NAVIGATION, SCALING, NOTES === */
+let cur=0;
+const go=n=>{cur=Math.max(0,Math.min(Z.length-1,n));document.querySelectorAll('.slide').forEach((s,i)=>{s.classList.toggle('active',i==cur);s.classList.toggle('visible',i==cur)});$('#pg').textContent=(cur+1)+' / '+Z.length;$('#nt').textContent='Slide '+(cur+1)+' notes: '+Z[cur][1]};
+const tn=()=>{const n=$('#nt');n.style.display=n.style.display=='block'?'none':'block'};
+$('#pv').onclick=()=>go(cur-1);$('#nx').onclick=()=>go(cur+1);$('#nb').onclick=tn;
+addEventListener('keydown',e=>{if(document.designMode=='on'&&e.key!='e'&&e.key!='E')return;
+ if(['ArrowRight','PageDown'].includes(e.key)||(e.key==' '&&!e.target.closest('button'))){e.preventDefault();go(cur+1)}
+ else if(['ArrowLeft','PageUp'].includes(e.key))go(cur-1);
+ else if(e.key=='n'||e.key=='N')tn();
+ else if(e.key=='e'||e.key=='E')document.designMode=document.designMode=='on'?'off':'on'});
+let sx=0;addEventListener('touchstart',e=>sx=e.touches[0].clientX);addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>80)go(cur+(d<0?1:-1))});
+const sz=()=>{const f=Math.min(innerWidth/1920,innerHeight/1080);$('#deckStage').style.transform=`translate(${(innerWidth-1920*f)/2}px,${(innerHeight-1080*f)/2}px) scale(${f})`};
+sz();addEventListener('resize',sz);go(0);
+</script>
+</body>
+</html>
